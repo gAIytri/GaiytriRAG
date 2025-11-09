@@ -1,0 +1,10 @@
+langchain
+langchain-openai
+langchain-community
+chromadb
+tiktoken
+python-dotenv
+langsmith
+fastapi
+uvicorn[standard]
+pydantic
