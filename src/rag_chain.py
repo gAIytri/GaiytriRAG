@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -13,7 +13,8 @@ DB_PATH = "../db"
 def get_rag_chain():
     # Load vector database
     db = Chroma(persist_directory=DB_PATH, embedding_function=OpenAIEmbeddings())
-    retriever = db.as_retriever(search_kwargs={"k": 4})
+    # Increase k to retrieve more relevant documents
+    retriever = db.as_retriever(search_kwargs={"k": 6})
 
     # Initialize LLM with memory
     llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
