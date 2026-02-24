@@ -17,7 +17,7 @@ Unlike firms that focus on isolated tools, Gaiytri builds a holistic AI ecosyste
 ---
 
 ## 3. What industries does Gaiytri serve?
-We currently serve clients in **e-commerce**, **hospitality and café management**, and **career-tech** (student job application automation). However, our solutions are **industry-agnostic** and adaptable to any organization seeking intelligent automation.
+We serve clients across Retail and E-Commerce, Marketing and Agencies, Healthcare and Wellness, Finance and Professional Services, Operations and Logistics, and SaaS and Technology. Our solutions are adaptable to any organization seeking intelligent automation.
 
 ---
 
@@ -72,7 +72,7 @@ We are headquartered in **Jersey City, New Jersey, USA**, and work with clients 
 ---
 
 ## 14. How can I contact the Gaiytri team?
-You can reach us anytime at **admin@gaiytri.com** or via our [LinkedIn](https://www.linkedin.com/company/gaiytrillc) and [Instagram](https://www.instagram.com/gaiytrillc) pages.
+You can reach us anytime at admin@gaiytri.com or via our LinkedIn page at linkedin.com/company/gaiytri.
 
 ---
 

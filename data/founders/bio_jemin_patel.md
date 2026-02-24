@@ -8,11 +8,9 @@ last_updated: "2025-11-07"
 **Chief Operating Officer & Co-Founder — Gaiytri LLC**
 
 ## Overview
-Jemin Patel is the Chief Operating Officer and Co-Founder of **Gaiytri LLC**, where he oversees day-to-day operations, analytics strategy, and organizational growth. Combining technical depth with business acumen, he ensures that Gaiytri’s automation products are efficient, data-driven, and scalable.
+Jemin leads the business strategy and operational direction at Gaiytri, driving growth, marketing, and organizational execution across the company. He builds the frameworks that align vision, revenue strategy, and day-to-day operations into one cohesive growth engine. From go-to-market initiatives to strategic partnerships, he ensures that every AI-powered interactive system Gaiytri develops is positioned effectively and delivers measurable business impact.
 
 With over four years of experience in **data analytics, market intelligence, and business optimization**, Jemin has worked across sectors including renewable energy, manufacturing, and marketing technology. His leadership philosophy centers on transforming complex data into actionable strategies that help organizations automate intelligently, optimize sustainably, and evolve continuously.
-
-At Gaiytri, Jemin leads cross-functional teams, establishes process frameworks, and forges partnerships that align innovation with long-term operational excellence.
 
 ---
 

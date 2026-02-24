@@ -1,57 +1,61 @@
+import os
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+try:
+    from config import DB_PATH, ENV_PATH
+    from guardrails import is_off_topic, sanitize_input, validate_output, REDIRECT_RESPONSE
+except ImportError:
+    from src.config import DB_PATH, ENV_PATH
+    from src.guardrails import is_off_topic, sanitize_input, validate_output, REDIRECT_RESPONSE
 
 # Load environment variables
-load_dotenv(dotenv_path="../.env")
+load_dotenv(dotenv_path=ENV_PATH)
 
-DB_PATH = "../db"
+# Module-level cache
+_cached_chain = None
 
-def get_rag_chain():
+def get_rag_chain(force_reload=False):
+    global _cached_chain
+    if _cached_chain is not None and not force_reload:
+        return _cached_chain
+
     # Load vector database
-    db = Chroma(persist_directory=DB_PATH, embedding_function=OpenAIEmbeddings())
+    db = Chroma(persist_directory=DB_PATH, embedding_function=AzureOpenAIEmbeddings(
+        azure_deployment=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT"),
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
+        request_timeout=15,
+    ))
     # Increase k to retrieve more relevant documents
     retriever = db.as_retriever(search_kwargs={"k": 6})
 
     # Initialize LLM with memory
-    llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
+    llm = AzureChatOpenAI(
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
+        temperature=0.7,
+        request_timeout=30,
+        max_retries=2,
+    )
 
     # Create RAG prompt template with chat history and validation
-    template = """You are an intelligent AI assistant representing Gaiytri LLC, an AI-driven innovation company. You communicate professionally like a knowledgeable company representative while being warm and approachable.
+    template = """You are Gaiytri AI, a helpful assistant for Gaiytri LLC, an AI automation company based in Jersey City, New Jersey. You are friendly, professional, and knowledgeable about Gaiytri.
 
-CRITICAL VALIDATION RULES:
-1. ONLY answer questions about Gaiytri LLC, its services, founders, technology, pricing, or contact information
-2. If the question is NOT about Gaiytri or is completely off-topic (general knowledge, unrelated companies, personal advice, etc.), respond EXACTLY as follows:
-   "I'm here to help you learn about Gaiytri and our AI automation solutions. For questions about other topics, I'd recommend checking with other resources. How can I help you with information about Gaiytri today?"
-3. For greetings (hi, hello, hey), respond warmly and briefly introduce yourself
-4. For thank you messages, acknowledge graciously and offer further help
+Your role is to answer questions about Gaiytri LLC using the provided context. This includes questions about the company, its services, founders, technology, pricing, process, industries served, and contact information.
 
-CONTEXT-AWARE RESPONSE GUIDELINES:
-When the user asks a SPECIFIC question, provide a FOCUSED answer:
-- "Tell me about Gaiytri" → Provide company overview and mission
-- "What services do you offer?" → Focus on services overview
-- "When was Gaiytri founded?" → Provide founding information specifically
-- "Who are the founders?" → Focus on founder information
-- "What technologies do you use?" → Focus on technical capabilities
-- "How much does it cost?" → Focus on pricing approach
-- "How do I contact you?" → Provide contact information
-
-RESPONSE STYLE:
-- Write in a natural, conversational tone as if speaking with a client or partner
-- Be professional yet approachable and enthusiastic about Gaiytri
-- Use simple, clear language without unnecessary jargon
-- Keep responses concise (2-4 sentences for simple questions, more detail when appropriate)
-- Do NOT use markdown symbols, asterisks, or special formatting in your response
-- Do NOT use bullet points or numbered lists
-- Write in complete, flowing sentences that connect naturally
-- Reference previous conversation naturally when relevant
-- Show enthusiasm about Gaiytri's capabilities without being salesy
-- If you don't have enough information, politely say so and suggest they contact Gaiytri directly at admin@gaiytri.com
-
-IMPORTANT: Base your answers PRIMARILY on the context provided below. This context comes from Gaiytri's official knowledge base.
+Guidelines:
+- Answer based on the context provided below. If the context does not contain the answer, let the user know and suggest they contact admin@gaiytri.com for more details.
+- For off-topic questions not related to Gaiytri, politely let them know you focus on Gaiytri-related topics and ask how you can help with Gaiytri.
+- For greetings, respond warmly and briefly introduce yourself.
+- Write in natural, conversational sentences without markdown formatting, bullet points, or numbered lists.
+- Keep responses concise, around 2 to 4 sentences for simple questions.
 
 Context from our knowledge base:
 {context}
@@ -65,7 +69,8 @@ Your response:"""
 
     prompt = ChatPromptTemplate.from_template(template)
 
-    return db, retriever, llm, prompt
+    _cached_chain = (db, retriever, llm, prompt)
+    return _cached_chain
 
 
 def ask_with_history(question: str, chat_history: list = None, stream: bool = False):
@@ -73,6 +78,17 @@ def ask_with_history(question: str, chat_history: list = None, stream: bool = Fa
     Ask a question with chat history for conversational context
     Supports both streaming and non-streaming responses
     """
+    # Pre-check: off-topic detection
+    if is_off_topic(question):
+        if stream:
+            def redirect_gen():
+                yield REDIRECT_RESPONSE
+            return redirect_gen()
+        return REDIRECT_RESPONSE
+
+    # Sanitize input
+    question = sanitize_input(question)
+
     try:
         db, retriever, llm, prompt = get_rag_chain()
 
@@ -114,14 +130,23 @@ def ask_with_history(question: str, chat_history: list = None, stream: bool = Fa
         else:
             # Return complete response
             response = llm.invoke(formatted_prompt)
-            return response.content if hasattr(response, 'content') else str(response)
+            content = response.content if hasattr(response, 'content') else str(response)
+            return validate_output(content)
 
     except Exception as e:
         print(f"Error in ask_with_history: {e}")
         # Fallback response without RAG context
         try:
             # Try to get LLM even if retriever failed
-            llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
+            llm = AzureChatOpenAI(
+                azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
+                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+                api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
+                temperature=0.7,
+                request_timeout=30,
+                max_retries=2,
+            )
             if stream:
                 return generate_fallback_response_stream(question, chat_history, llm)
             else:
@@ -138,7 +163,7 @@ def ask_with_history(question: str, chat_history: list = None, stream: bool = Fa
                 return fallback_msg
 
 
-def generate_fallback_response(question: str, chat_history: list, llm: ChatOpenAI):
+def generate_fallback_response(question: str, chat_history: list, llm: AzureChatOpenAI):
     """
     Generate a response without RAG context when retrieval fails
     """
@@ -172,14 +197,15 @@ Response:"""
         )
 
         response = llm.invoke(formatted)
-        return response.content if hasattr(response, 'content') else str(response)
+        content = response.content if hasattr(response, 'content') else str(response)
+        return validate_output(content)
 
     except Exception as e:
         print(f"Error in fallback response: {e}")
         return "I apologize, but I'm experiencing technical difficulties at the moment. Please contact Gaiytri directly at admin@gaiytri.com for assistance. We appreciate your patience."
 
 
-def generate_fallback_response_stream(question: str, chat_history: list, llm: ChatOpenAI):
+def generate_fallback_response_stream(question: str, chat_history: list, llm: AzureChatOpenAI):
     """
     Generate a streaming response without RAG context when retrieval fails
     """

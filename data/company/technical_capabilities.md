@@ -54,6 +54,7 @@ Gaiytri's technical foundation combines modern web development practices with cu
 
 ### AI & Machine Learning
 **Technologies We Use:**
+- **Azure OpenAI Service** — GPT-4, GPT-4o for enterprise language understanding
 - **OpenAI APIs** — GPT-4, GPT-4o, GPT-4-turbo for language understanding
 - **LangChain** — Framework for building LLM-powered applications
 - **LangSmith** — LLM application monitoring and debugging
@@ -96,10 +97,10 @@ Gaiytri's technical foundation combines modern web development practices with cu
 ### Cloud & Infrastructure
 **Platforms We Deploy On:**
 - **Vercel** — Frontend hosting and serverless functions
-- **Railway** — Backend deployment platform
+- **Azure Container Apps** — Containerized backend deployment
+- **Azure OpenAI Service** — Enterprise AI model hosting
 - **AWS** — Amazon Web Services (EC2, S3, Lambda, RDS)
 - **Google Cloud Platform** — Compute Engine, Cloud Functions
-- **Heroku** — Platform as a Service (PaaS)
 - **DigitalOcean** — Virtual private servers
 - **Netlify** — JAMstack deployment
 

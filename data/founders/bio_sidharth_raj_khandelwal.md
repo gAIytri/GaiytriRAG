@@ -8,7 +8,7 @@ last_updated: "2025-11-07"
 **Chief Technology Officer & Co-Founder — Gaiytri LLC**
 
 ## Overview
-Sidharth Raj Khandelwal is an AI-driven Full Stack Developer and technology entrepreneur with deep expertise in software engineering, automation, and intelligent systems. As the CTO & Co-Founder of **Gaiytri LLC**, he leads the architecture and development of scalable AI automation platforms that help businesses streamline workflows, enhance efficiency, and accelerate growth.
+Sidharth leads the technology vision and system architecture at Gaiytri, designing the core infrastructure that powers every Interactive AI System the company develops. His work centers on architecting modular, production grade platforms that integrate reasoning engines, automation frameworks, and structured data layers directly into business operations, ensuring systems are secure, extensible, and engineered for long term reliability. By translating complex technical challenges into cohesive, execution ready architectures, this foundation enables Gaiytri's Interactive AI Systems to operate with precision and support sustained organizational growth.
 
 Before co-founding Gaiytri, Sidharth worked at **We Rebel LLC**, where he architected an end-to-end music publishing and royalty automation system using **CISAC-standard CWR pipelines**, **Django**, and **React Native**. His innovations also include AI tools that help artists identify unclaimed works and manage catalog metadata across streaming platforms.
 

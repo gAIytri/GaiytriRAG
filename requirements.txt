@@ -9,3 +9,4 @@ langsmith
 fastapi
 uvicorn[standard]
 pydantic
+slowapi
