@@ -12,6 +12,7 @@ except ImportError:
     from src.rag_chain import ask_with_history
     from src.config import ENV_PATH
 import os
+import re
 import json
 from dotenv import load_dotenv
 
@@ -40,6 +41,17 @@ app.add_middleware(
     allow_methods=["POST", "GET", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )
+
+
+def strip_markdown(text):
+    """Remove markdown formatting from text."""
+    text = text.replace('**', '')
+    text = text.replace('__', '')
+    text = text.replace('##', '')
+    text = text.replace('# ', '')
+    text = re.sub(r'^\s*[-*]\s+', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^\s*\d+\.\s+', '', text, flags=re.MULTILINE)
+    return text
 
 
 class QuestionRequest(BaseModel):
@@ -168,8 +180,9 @@ async def ask_question_stream(request: Request, body: QuestionRequest):
                 else:
                     content = str(chunk)
 
-                # Send as SSE format
+                # Send as SSE format with markdown stripped
                 if content:
+                    content = strip_markdown(content)
                     yield f"data: {json.dumps({'content': content})}\n\n"
 
             # Send completion signal
